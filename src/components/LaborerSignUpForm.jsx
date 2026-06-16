@@ -13,27 +13,51 @@ import {
   MapPin, 
   Plus, 
   Minus, 
-  Loader2,
-  ChevronDown,
-  X
+  Loader2
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { translations } from '../lib/translations';
 
-const skillOptions = [
-  { id: 'mason', label: 'Rajmistri (Mason)' },
-  { id: 'helper', label: 'Beldaar (Helper)' },
-  { id: 'carpenter', label: 'Carpenter (Mistri)' },
-  { id: 'plumber', label: 'Plumber' },
-  { id: 'electrician', label: 'Electrician' },
-  { id: 'painter', label: 'Painter' },
-  { id: 'welder', label: 'Welder' }
+// Icon paths
+const I = {
+  plus: 'M12 5v14 M5 12h14',
+  people: 'M9 11a3 3 0 100-6 3 3 0 000 6z M2 20c.6-3 2.8-4.6 6-4.6 1 0 1.9.15 2.7.45 M16 11a3 3 0 100-6 M14.5 15.4c2.6.2 4.4 1.8 4.9 4.6',
+  brick: 'M4 7h16v5H4z M4 12h16v5H4z M9 7v5 M14 12v5',
+  roller: 'M5 5h12v5H5z M17 7h2.5v4H12v4 M12 15v5',
+  bolt: 'M13 3L6 13.5h5L10 21l7-10.5h-5l1-7.5z',
+  droplet: 'M12 4c3 4 6 6.8 6 10a6 6 0 11-12 0c0-3.2 3-6 6-10z',
+  hammer: 'M14 6l4 4 M11.5 8.5l4 4-6.5 6.5-4-4 6.5-6.5z M13 4.5l6.5 6.5',
+  welder: 'M12 2v3 M12 19v3 M3 12h3 M18 12h3 M5.5 5.5l2 2 M16.5 16.5l2 2 M16.5 7.5l2-2 M5.5 18.5l2-2',
+  rebar: 'M4 5h16 M4 12h16 M4 19h16 M9 4v16 M15 4v16',
+  tile: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
+  hardhat: 'M3 18h18 M5 18v-2a7 7 0 0114 0v2 M10 8.5V5.5h4v3',
+  home: 'M4 11l8-7 8 7 M6 10v9h12v-9 M10 19v-5h4v5',
+};
+
+function Ic({ d, size = 22, color = 'currentColor', sw = 2, fill = 'none' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0, display: 'block' }}>
+      <path d={d} fill={fill} stroke={fill === 'none' ? color : 'none'} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const SKILLS = [
+  { key: 'mistri',      ic: 'brick',   hi: 'मिस्त्री',       en: 'Mason' },
+  { key: 'carpenter',   ic: 'hammer',  hi: 'बढ़ई',          en: 'Carpenter' },
+  { key: 'painter',     ic: 'roller',  hi: 'पेंटर',         en: 'Painter' },
+  { key: 'welder',      ic: 'welder',  hi: 'वेल्डर',        en: 'Welder' },
+  { key: 'plumber',     ic: 'droplet', hi: 'नलसाज',         en: 'Plumber' },
+  { key: 'electrician', ic: 'bolt',    hi: 'बिजली मिस्त्री', en: 'Electrician' },
+  { key: 'rebar',       ic: 'rebar',   hi: 'सरिया',         en: 'Bar bender' },
+  { key: 'tiler',       ic: 'tile',    hi: 'टाइल',          en: 'Tiler' },
+  { key: 'consthelper', ic: 'hardhat', hi: 'निर्माण सहायक',  en: 'Site helper' },
+  { key: 'labour',      ic: 'people',  hi: 'मजदूर',         en: 'Labourer' },
+  { key: 'domestic',    ic: 'home',    hi: 'घरेलू सहायक',    en: 'Domestic help' },
+  { key: 'other',       ic: 'plus',    hi: 'अन्य',          en: 'Other' },
 ];
 
 const experienceOptions = [
@@ -57,7 +81,6 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [isSkillsOpen, setIsSkillsOpen] = useState(false);
 
   const t = translations[language].laborer;
 
@@ -239,95 +262,28 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
                 </div>
               </div>
 
-              {/* Field 3: Primary Skill(s) (Multi-Select Dropdown) */}
+              {/* Field 3: Primary Skill(s) (Tile Selector Grid) */}
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.primarySkills}</Label>
                 <p className="text-[10px] text-slate-400 mb-2 font-semibold">{t.skillsSubtext}</p>
                 
-                <Popover open={isSkillsOpen} onOpenChange={setIsSkillsOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={isSkillsOpen}
-                      className={cn(
-                        "w-full h-auto min-h-12 justify-between px-4 py-2 bg-white hover:bg-white text-slate-800 border rounded-xl hover:text-slate-800 focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#7A3BFF] cursor-pointer",
-                        errors.skills ? "border-dispute-red" : "border-slate-200"
-                      )}
-                    >
-                      {formData.skills.length === 0 ? (
-                        <span className="text-slate-400 text-sm font-normal">{t.skillsPlaceholder}</span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5 max-w-[90%] text-left">
-                          {formData.skills.map((skillId) => {
-                            const skill = skillOptions.find((s) => s.id === skillId);
-                            if (!skill) return null;
-                            const skillLabel = t.skillsMap[skill.id] || skill.label;
-                            return (
-                              <Badge
-                                key={skill.id}
-                                variant="secondary"
-                                className="bg-[#7A3BFF] hover:bg-[#7A3BFF] text-white hover:text-white flex items-center gap-1 py-0.5 px-2 text-xs font-semibold rounded-lg font-sans border-0"
-                              >
-                                <span>{skillLabel}</span>
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  className="ml-1 cursor-pointer hover:bg-white/20 rounded-full p-0.5"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleSkill(skill.id);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                      e.stopPropagation();
-                                      toggleSkill(skill.id);
-                                    }
-                                  }}
-                                >
-                                  <X className="h-3 w-3 shrink-0" />
-                                </span>
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      )}
-                      <ChevronDown className={cn("h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200", isSkillsOpen ? "rotate-180" : "")} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white border border-[#DDE3EA] rounded-2xl shadow-lg z-50">
-                    <Command className="bg-white" shouldFilter={false}>
-                      <CommandList className="max-h-60 overflow-y-auto p-1.5">
-                        <CommandGroup>
-                          {skillOptions.map((skill) => {
-                            const isSelected = formData.skills.includes(skill.id);
-                            const skillLabel = t.skillsMap[skill.id] || skill.label;
-                            return (
-                              <CommandItem
-                                key={skill.id}
-                                value={skill.id}
-                                data-checked={isSelected}
-                                onSelect={() => {
-                                  toggleSkill(skill.id);
-                                }}
-                                className={cn(
-                                  "flex items-center justify-between py-2 px-3 rounded-xl font-semibold text-xs md:text-sm cursor-pointer transition-all duration-150 text-left",
-                                  isSelected 
-                                    ? "bg-slate-50 text-[#7A3BFF]" 
-                                    : "hover:bg-slate-50 text-slate-700"
-                                )}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span>{skillLabel}</span>
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <div className="skill-grid mt-1">
+                  {SKILLS.map((sk) => {
+                    const on = formData.skills.includes(sk.key);
+                    const skLabel = language === 'hi' ? sk.hi : sk.en;
+                    return (
+                      <button 
+                        type="button" 
+                        key={sk.key} 
+                        className={cn('skill hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer', on ? 'on' : '')} 
+                        onClick={() => toggleSkill(sk.key)}
+                      >
+                        <Ic d={I[sk.ic]} size={21} color="currentColor" sw={2} fill={sk.ic === 'bolt' && on ? 'currentColor' : 'none'} />
+                        <span className="lab">{skLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {errors.skills && <span className="text-xs text-dispute-red mt-1">{errors.skills}</span>}
               </div>

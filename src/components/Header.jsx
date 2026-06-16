@@ -46,6 +46,15 @@ export default function Header({
       
       {/* Right section: Actions */}
       <div className="flex items-center gap-3 sm:gap-6">
+        {onBack ? (
+          <div className="cursor-pointer" onClick={() => onNavigate('home')}>
+            <span className={`text-xl md:text-2xl font-black tracking-tight font-display ${isDark ? 'text-white' : 'text-[var(--ink)]'}`}>
+              श्रमिक
+            </span>
+          </div>
+        ) : (
+          rightAction
+        )}
         {onLanguageChange && (
           <Select value={language} onValueChange={onLanguageChange}>
             <SelectTrigger className={`h-8 w-14 font-black font-sans cursor-pointer text-xs focus:ring-0 ${
@@ -61,15 +70,6 @@ export default function Header({
               <SelectItem value="en" className={`cursor-pointer font-sans font-bold text-xs justify-center pl-2 pr-2 ${language === 'en' ? 'text-brand-grad focus:text-brand-grad' : 'focus:bg-[var(--page)] focus:text-[var(--ink)]'}`}>A</SelectItem>
             </SelectContent>
           </Select>
-        )}
-        {onBack ? (
-          <div className="cursor-pointer" onClick={() => onNavigate('home')}>
-            <span className={`text-xl md:text-2xl font-black tracking-tight font-display ${isDark ? 'text-white' : 'text-shramik-navy'}`}>
-              श्रमिक
-            </span>
-          </div>
-        ) : (
-          rightAction
         )}
       </div>
     </header>
