@@ -1,0 +1,568 @@
+import React, { useState } from 'react';
+import Header from './Header';
+import Footer from './Footer';
+import { 
+  HardHat, 
+  Check, 
+  Wallet, 
+  ShieldCheck, 
+  Lock, 
+  Clock, 
+  ArrowRight, 
+  Camera, 
+  MapPin, 
+  Plus, 
+  Minus, 
+  Loader2,
+  ChevronDown,
+  X
+} from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { translations } from '../lib/translations';
+
+const skillOptions = [
+  { id: 'mason', label: 'Rajmistri (Mason)' },
+  { id: 'helper', label: 'Beldaar (Helper)' },
+  { id: 'carpenter', label: 'Carpenter (Mistri)' },
+  { id: 'plumber', label: 'Plumber' },
+  { id: 'electrician', label: 'Electrician' },
+  { id: 'painter', label: 'Painter' },
+  { id: 'welder', label: 'Welder' }
+];
+
+const experienceOptions = [
+  { id: '0-1', label: '0-1 year (Beldaar)' },
+  { id: '1-3', label: '1-3 years (Helper)' },
+  { id: '3-5', label: '3-5 years (Mistri)' },
+  { id: '5+', label: '5+ years (Thekedar)' }
+];
+
+export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi', onLanguageChange }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    skills: [],
+    experience: '',
+    dailyRate: 600,
+    location: '',
+    aadhaarVerified: false,
+    bankAccount: '',
+    bankIfsc: ''
+  });
+
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isVerifyingAadhaar, setIsVerifyingAadhaar] = useState(false);
+  const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+
+  const t = translations[language].laborer;
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+      if (errors.photo) {
+        setErrors(prev => ({ ...prev, photo: '' }));
+      }
+    }
+  };
+
+  const toggleSkill = (skillId) => {
+    setFormData(prev => {
+      const skills = prev.skills.includes(skillId)
+        ? prev.skills.filter(id => id !== skillId)
+        : [...prev.skills, skillId];
+      
+      if (errors.skills && skills.length > 0) {
+        setErrors(err => ({ ...err, skills: '' }));
+      }
+      return { ...prev, skills };
+    });
+  };
+
+  const adjustRate = (amount) => {
+    setFormData(prev => ({
+      ...prev,
+      dailyRate: Math.max(300, prev.dailyRate + amount)
+    }));
+  };
+
+  const detectLocation = () => {
+    setIsLocating(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setTimeout(() => {
+            const detectedLoc = language === 'hi' ? 'गुरुग्राम, हरियाणा (GPS द्वारा)' : 'Gurugram, Haryana (GPS Detected)';
+            setFormData(prev => ({ ...prev, location: detectedLoc }));
+            setIsLocating(false);
+            if (errors.location) {
+              setErrors(prev => ({ ...prev, location: '' }));
+            }
+          }, 1200);
+        },
+        (error) => {
+          setTimeout(() => {
+            const fallbackLoc = language === 'hi' ? 'नई दिल्ली, दिल्ली' : 'New Delhi, Delhi';
+            setFormData(prev => ({ ...prev, location: fallbackLoc }));
+            setIsLocating(false);
+            if (errors.location) {
+              setErrors(prev => ({ ...prev, location: '' }));
+            }
+          }, 1000);
+        }
+      );
+    } else {
+      setIsLocating(false);
+    }
+  };
+
+  const verifyWithDigiLocker = () => {
+    setIsVerifyingAadhaar(true);
+    setTimeout(() => {
+      setIsVerifyingAadhaar(false);
+      setFormData(prev => ({ ...prev, aadhaarVerified: true }));
+      if (errors.aadhaarVerified) {
+        setErrors(prev => ({ ...prev, aadhaarVerified: '' }));
+      }
+    }, 1500);
+  };
+
+  const handleLaborerSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = language === 'hi' ? 'पूरा नाम आवश्यक है' : 'Full name is required';
+    }
+    if (!photoPreview) {
+      newErrors.photo = language === 'hi' ? 'प्रोफ़ाइल फ़ोटो आवश्यक है' : 'Profile photo is required';
+    }
+    if (formData.skills.length === 0) {
+      newErrors.skills = language === 'hi' ? 'कम से कम एक मुख्य हुनर चुनें' : 'Select at least one primary skill';
+    }
+    if (!formData.experience) {
+      newErrors.experience = language === 'hi' ? 'अनुभव का स्तर चुनें' : 'Select your experience level';
+    }
+    if (!formData.location.trim()) {
+      newErrors.location = language === 'hi' ? 'काम का स्थान / शहर आवश्यक है' : 'Work location/city is required';
+    }
+    if (!formData.aadhaarVerified) {
+      newErrors.aadhaarVerified = language === 'hi' ? 'आधार सत्यापन आवश्यक है' : 'Aadhaar verification is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          onNavigate('home');
+        }, 2000);
+      }, 1200);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface-gray-2 text-[#1C2733] font-sans flex flex-col justify-between">
+      <Header 
+        theme="light" 
+        onNavigate={onNavigate} 
+        onBack={onBack} 
+        language={language}
+        onLanguageChange={onLanguageChange}
+      />
+
+      <main className="max-w-xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-12 flex-grow flex flex-col justify-center text-left">
+        <div className="bg-white border border-[#DDE3EA] rounded-3xl p-5 sm:p-8 md:p-10 shadow-sm">
+          <h2 className="text-3xl font-bold text-shramik-navy mb-2 font-display">{t.title}</h2>
+          <p className="text-slate-500 text-sm mb-8 font-semibold">{t.subtitle}</p>
+
+          {isSuccess ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="text-prosperity-green bg-emerald-50 p-5 rounded-full mb-6 border border-emerald-100 animate-bounce">
+                <Check className="w-12 h-12 stroke-[3]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2 text-shramik-navy font-display">{t.successTitle}</h3>
+              <p className="text-base text-slate-500 font-semibold">{t.successSubtitle}</p>
+            </div>
+          ) : (
+            <form onSubmit={handleLaborerSubmit} className="flex flex-col gap-8">
+              
+              {/* Field 1: Full Name */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.fullName}</Label>
+                <Input
+                  type="text"
+                  name="name"
+                  placeholder={language === 'hi' ? 'अपना पूरा नाम दर्ज करें' : 'Enter your full name'}
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`h-12 border rounded-xl px-4 py-3 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy ${errors.name ? 'border-dispute-red' : 'border-slate-200'}`}
+                />
+                {errors.name && <span className="text-xs text-dispute-red">{errors.name}</span>}
+              </div>
+
+              {/* Field 2: Profile Photo (Camera/Upload Mock) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.profilePhoto}</Label>
+                <div className="flex items-center gap-5 mt-1">
+                  <div className="relative w-20 h-20 rounded-full bg-slate-100 border border-[#DDE3EA] flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {photoPreview ? (
+                      <img src={photoPreview} className="w-full h-full object-cover" alt="Profile preview" />
+                    ) : (
+                      <HardHat className="w-8 h-8 text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      id="profile-photo-input" 
+                      className="hidden" 
+                      onChange={handlePhotoChange}
+                    />
+                    <label 
+                      htmlFor="profile-photo-input"
+                      className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl border border-slate-300/60 cursor-pointer transition-all duration-200 text-xs md:text-sm"
+                    >
+                      <Camera className="w-4 h-4 text-slate-500" />
+                      <span>{t.photoPrompt}</span>
+                    </label>
+                    <p className="text-[10px] text-slate-400 mt-1.5 font-semibold">{t.photoSubtext}</p>
+                    {errors.photo && <span className="text-xs text-dispute-red block mt-1">{errors.photo}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Field 3: Primary Skill(s) (Multi-Select Dropdown) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.primarySkills}</Label>
+                <p className="text-[10px] text-slate-400 mb-2 font-semibold">{t.skillsSubtext}</p>
+                
+                <Popover open={isSkillsOpen} onOpenChange={setIsSkillsOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isSkillsOpen}
+                      className={cn(
+                        "w-full h-auto min-h-12 justify-between px-4 py-2 bg-white hover:bg-white text-slate-800 border rounded-xl hover:text-slate-800 focus:ring-0 focus-visible:ring-2 focus-visible:ring-shramik-navy cursor-pointer",
+                        errors.skills ? "border-dispute-red" : "border-slate-200"
+                      )}
+                    >
+                      {formData.skills.length === 0 ? (
+                        <span className="text-slate-400 text-sm font-normal">{t.skillsPlaceholder}</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5 max-w-[90%] text-left">
+                          {formData.skills.map((skillId) => {
+                            const skill = skillOptions.find((s) => s.id === skillId);
+                            if (!skill) return null;
+                            const skillLabel = t.skillsMap[skill.id] || skill.label;
+                            return (
+                              <Badge
+                                key={skill.id}
+                                variant="secondary"
+                                className="bg-shramik-navy hover:bg-shramik-navy-hover text-white hover:text-white flex items-center gap-1 py-0.5 px-2 text-xs font-semibold rounded-lg font-sans border-0"
+                              >
+                                <span>{skillLabel}</span>
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  className="ml-1 cursor-pointer hover:bg-white/20 rounded-full p-0.5"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSkill(skill.id);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.stopPropagation();
+                                      toggleSkill(skill.id);
+                                    }
+                                  }}
+                                >
+                                  <X className="h-3 w-3 shrink-0" />
+                                </span>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <ChevronDown className={cn("h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200", isSkillsOpen ? "rotate-180" : "")} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white border border-[#DDE3EA] rounded-2xl shadow-lg z-50">
+                    <Command className="bg-white" shouldFilter={false}>
+                      <CommandList className="max-h-60 overflow-y-auto p-1.5">
+                        <CommandGroup>
+                          {skillOptions.map((skill) => {
+                            const isSelected = formData.skills.includes(skill.id);
+                            const skillLabel = t.skillsMap[skill.id] || skill.label;
+                            return (
+                              <CommandItem
+                                key={skill.id}
+                                value={skill.id}
+                                data-checked={isSelected}
+                                onSelect={() => {
+                                  toggleSkill(skill.id);
+                                }}
+                                className={cn(
+                                  "flex items-center justify-between py-2 px-3 rounded-xl font-semibold text-xs md:text-sm cursor-pointer transition-all duration-150 text-left",
+                                  isSelected 
+                                    ? "bg-slate-50 text-shramik-navy" 
+                                    : "hover:bg-slate-50 text-slate-700"
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span>{skillLabel}</span>
+                                </div>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {errors.skills && <span className="text-xs text-dispute-red mt-1">{errors.skills}</span>}
+              </div>
+
+              {/* Field 4: Experience Level (Single-Select Chips) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.experienceLevel}</Label>
+                <div className="flex flex-wrap gap-2.5 mt-1">
+                  {experienceOptions.map(exp => {
+                    const isSelected = formData.experience === exp.id;
+                    const expLabel = t.experienceMap[exp.id] || exp.label;
+                    return (
+                      <button
+                        type="button"
+                        key={exp.id}
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, experience: exp.id }));
+                          if (errors.experience) {
+                            setErrors(err => ({ ...err, experience: '' }));
+                          }
+                        }}
+                        className={`py-2 px-4 rounded-xl border font-semibold text-xs md:text-sm transition-all duration-150 cursor-pointer ${
+                          isSelected 
+                            ? 'bg-shramik-navy border-shramik-navy text-white shadow-sm' 
+                            : 'bg-surface-gray-2 border-slate-200 hover:border-shramik-navy/30 text-slate-700'
+                        }`}
+                      >
+                        <span>{expLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.experience && <span className="text-xs text-dispute-red mt-1">{errors.experience}</span>}
+              </div>
+
+              {/* Field 5: Expected Daily Rate (Numeric with +/- buttons) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.expectedWage}</Label>
+                <p className="text-[10px] text-slate-400 font-semibold mb-2">{t.wageSubtext}</p>
+                
+                <div className="flex items-center gap-3 w-fit bg-surface-gray-2 border border-slate-200 p-1.5 rounded-2xl">
+                    <Button
+                      type="button"
+                      onClick={() => adjustRate(-50)}
+                      variant="outline"
+                      size="icon"
+                      className="w-10 h-10 rounded-xl bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 border border-slate-200 cursor-pointer transition-colors"
+                      aria-label="Decrease daily rate"
+                    >
+                      <Minus className="w-4 h-4 stroke-[3]" />
+                    </Button>
+                    
+                    <div className="min-w-28 text-center">
+                      <span className="text-2xl font-black text-[#1C2733] font-display">₹{formData.dailyRate}</span>
+                      <span className="block text-[9px] text-slate-400 font-semibold">{t.wagePerDay}</span>
+                    </div>
+
+                    <Button
+                       type="button"
+                       onClick={() => adjustRate(50)}
+                       variant="outline"
+                       size="icon"
+                       className="w-10 h-10 rounded-xl bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 border border-slate-200 cursor-pointer transition-colors"
+                       aria-label="Increase daily rate"
+                    >
+                      <Plus className="w-4 h-4 stroke-[3]" />
+                    </Button>
+                </div>
+              </div>
+
+              {/* Field 6: Work Location / City (Autocomplete + GPS) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.workLocation}</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-grow">
+                    <Input
+                      type="text"
+                      name="location"
+                      placeholder={t.locationPlaceholder}
+                      value={formData.location}
+                      onChange={handleChange}
+                      className={`h-12 border rounded-xl pl-4 pr-10 py-3 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy ${errors.location ? 'border-dispute-red' : 'border-slate-200'}`}
+                    />
+                    <MapPin className="absolute right-3 top-3.5 w-5 h-5 text-slate-400" />
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    onClick={detectLocation}
+                    disabled={isLocating}
+                    className="bg-shramik-navy hover:bg-shramik-navy-hover disabled:bg-shramik-navy/60 text-white font-bold h-12 w-12 rounded-xl cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors shadow-sm border-0"
+                    title={language === 'hi' ? 'वर्तमान स्थान का पता लगाएं' : 'Detect current location'}
+                  >
+                    {isLocating ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <MapPin className="w-5 h-5" />
+                    )}
+                  </Button>
+                </div>
+                {errors.location && <span className="text-xs text-dispute-red">{errors.location}</span>}
+              </div>
+
+              {/* Field 7: Aadhaar / ID Verify (DigiLocker / Upload) */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.idVerification}</Label>
+                <p className="text-[10px] text-slate-400 font-semibold mb-2">{t.idSubtext}</p>
+                
+                {formData.aadhaarVerified ? (
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-[#138808]">
+                    <ShieldCheck className="w-6 h-6 flex-shrink-0" />
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-bold">{t.idVerified}</span>
+                      <span className="text-[10px] text-emerald-600 font-semibold">{t.idVerifiedSubtext}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      type="button"
+                      onClick={verifyWithDigiLocker}
+                      disabled={isVerifyingAadhaar}
+                      className="w-full h-12 bg-[#15497A] hover:bg-[#0F3D63] disabled:bg-[#15497A]/60 text-white font-bold rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm text-sm border-0"
+                    >
+                      {isVerifyingAadhaar ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{t.connectingDigiLocker}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4" />
+                          <span>{t.verifyDigiLocker}</span>
+                        </>
+                      )}
+                    </Button>
+                    
+                    <div className="relative flex py-2 items-center">
+                      <div className="flex-grow border-t border-slate-200"></div>
+                      <span className="flex-shrink mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t.orUpload}</span>
+                      <div className="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      id="aadhaar-upload"
+                      className="hidden"
+                      onChange={() => setFormData(prev => ({ ...prev, aadhaarVerified: true }))}
+                    />
+                    <label
+                      htmlFor="aadhaar-upload"
+                      className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl border border-slate-300/60 text-center cursor-pointer transition-all duration-200 text-sm"
+                    >
+                      {t.uploadId}
+                    </label>
+                  </div>
+                )}
+                {errors.aadhaarVerified && <span className="text-xs text-dispute-red mt-1">{errors.aadhaarVerified}</span>}
+              </div>
+
+              {/* Field 8: Bank Account Details (Optional) */}
+              <div className="flex flex-col gap-3 bg-surface-gray-2/50 border border-slate-200/60 p-6 rounded-2xl">
+                <div className="flex justify-between items-center mb-1">
+                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.bankTitle}</Label>
+                  <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider">{t.bankOptional}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-semibold mb-2 leading-relaxed">{t.bankSubtext}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.bankAccount}</Label>
+                    <Input
+                      type="text"
+                      name="bankAccount"
+                      placeholder="12-16 digit account number"
+                      value={formData.bankAccount}
+                      onChange={handleChange}
+                      className="h-12 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.bankIfsc}</Label>
+                    <Input
+                      type="text"
+                      name="bankIfsc"
+                      placeholder="SBIN0000123"
+                      value={formData.bankIfsc}
+                      onChange={handleChange}
+                      className="h-12 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-14 bg-shramik-navy hover:bg-shramik-navy-hover disabled:bg-shramik-navy/60 text-white font-bold rounded-2xl mt-4 cursor-pointer flex items-center justify-center gap-2 font-display text-lg shadow-md transition-colors border-0"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{t.submittingProfile}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t.submitProfile}</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
+        </div>
+      </main>
+      <Footer theme="light" />
+    </div>
+  );
+}
