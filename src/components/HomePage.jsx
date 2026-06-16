@@ -296,7 +296,7 @@ export default function HomePage({ onNavigate, language = 'hi', onLanguageChange
               <div className="w-full aspect-video rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative">
                 <img
                   src="/IMG_0842.HEIC"
-                  className="w-full h-full object-contain"
+                  className="w-full h-half object-cover"
                   alt="Registration Drive"
                 />
               </div>
