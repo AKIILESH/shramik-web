@@ -361,7 +361,7 @@ body {
   .cta-banner { padding: 36px 22px; }
   .cta-banner h2 { font-size: 28px; }
   .seg-btn { padding: 8px 12px; gap: 4px; font-size: 13.5px; }
-  .header-container { padding: 12px 18px; }
+  .header-container { padding: 16px 18px; }
   
   /* We will handle segmented switch responsive placement via tailwind or inline CSS */
 }
