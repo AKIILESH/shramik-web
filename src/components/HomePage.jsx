@@ -45,7 +45,7 @@ export default function HomePage({ onNavigate, language = 'hi', onLanguageChange
         {/* Background Image Container */}
         <div className="absolute inset-0 w-full h-full bg-[#0E1626]">
           <img 
-            src="/hero_home.png" 
+            src="/hero_home.jpg" 
             className="w-full h-full object-cover object-center opacity-65" 
             alt="Empowering India's Workforce"
             onError={(e) => {

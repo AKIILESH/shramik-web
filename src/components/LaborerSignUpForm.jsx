@@ -49,10 +49,7 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
     skills: [],
     experience: '',
     dailyRate: 600,
-    location: '',
-    aadhaarVerified: false,
-    bankAccount: '',
-    bankIfsc: ''
+    location: ''
   });
 
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -60,7 +57,6 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [isVerifyingAadhaar, setIsVerifyingAadhaar] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
 
   const t = translations[language].laborer;
@@ -136,17 +132,6 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
     }
   };
 
-  const verifyWithDigiLocker = () => {
-    setIsVerifyingAadhaar(true);
-    setTimeout(() => {
-      setIsVerifyingAadhaar(false);
-      setFormData(prev => ({ ...prev, aadhaarVerified: true }));
-      if (errors.aadhaarVerified) {
-        setErrors(prev => ({ ...prev, aadhaarVerified: '' }));
-      }
-    }, 1500);
-  };
-
   const handleLaborerSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -164,9 +149,6 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
     }
     if (!formData.location.trim()) {
       newErrors.location = language === 'hi' ? 'काम का स्थान / शहर आवश्यक है' : 'Work location/city is required';
-    }
-    if (!formData.aadhaarVerified) {
-      newErrors.aadhaarVerified = language === 'hi' ? 'आधार सत्यापन आवश्यक है' : 'Aadhaar verification is required';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -447,98 +429,6 @@ export default function LaborerSignUpForm({ onNavigate, onBack, language = 'hi',
                   </Button>
                 </div>
                 {errors.location && <span className="text-xs text-dispute-red">{errors.location}</span>}
-              </div>
-
-              {/* Field 7: Aadhaar / ID Verify (DigiLocker / Upload) */}
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.idVerification}</Label>
-                <p className="text-[10px] text-slate-400 font-semibold mb-2">{t.idSubtext}</p>
-                
-                {formData.aadhaarVerified ? (
-                  <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-[#138808]">
-                    <ShieldCheck className="w-6 h-6 flex-shrink-0" />
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-bold">{t.idVerified}</span>
-                      <span className="text-[10px] text-emerald-600 font-semibold">{t.idVerifiedSubtext}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      type="button"
-                      onClick={verifyWithDigiLocker}
-                      disabled={isVerifyingAadhaar}
-                      className="w-full h-12 bg-[#15497A] hover:bg-[#0F3D63] disabled:bg-[#15497A]/60 text-white font-bold rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm text-sm border-0"
-                    >
-                      {isVerifyingAadhaar ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>{t.connectingDigiLocker}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4" />
-                          <span>{t.verifyDigiLocker}</span>
-                        </>
-                      )}
-                    </Button>
-                    
-                    <div className="relative flex py-2 items-center">
-                      <div className="flex-grow border-t border-slate-200"></div>
-                      <span className="flex-shrink mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t.orUpload}</span>
-                      <div className="flex-grow border-t border-slate-200"></div>
-                    </div>
-
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      id="aadhaar-upload"
-                      className="hidden"
-                      onChange={() => setFormData(prev => ({ ...prev, aadhaarVerified: true }))}
-                    />
-                    <label
-                      htmlFor="aadhaar-upload"
-                      className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl border border-slate-300/60 text-center cursor-pointer transition-all duration-200 text-sm"
-                    >
-                      {t.uploadId}
-                    </label>
-                  </div>
-                )}
-                {errors.aadhaarVerified && <span className="text-xs text-dispute-red mt-1">{errors.aadhaarVerified}</span>}
-              </div>
-
-              {/* Field 8: Bank Account Details (Optional) */}
-              <div className="flex flex-col gap-3 bg-surface-gray-2/50 border border-slate-200/60 p-6 rounded-2xl">
-                <div className="flex justify-between items-center mb-1">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.bankTitle}</Label>
-                  <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider">{t.bankOptional}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-semibold mb-2 leading-relaxed">{t.bankSubtext}</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.bankAccount}</Label>
-                    <Input
-                      type="text"
-                      name="bankAccount"
-                      placeholder="12-16 digit account number"
-                      value={formData.bankAccount}
-                      onChange={handleChange}
-                      className="h-12 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.bankIfsc}</Label>
-                    <Input
-                      type="text"
-                      name="bankIfsc"
-                      placeholder="SBIN0000123"
-                      value={formData.bankIfsc}
-                      onChange={handleChange}
-                      className="h-12 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 bg-white focus:outline-none focus:border-shramik-navy text-sm"
-                    />
-                  </div>
-                </div>
               </div>
 
               <Button
