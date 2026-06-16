@@ -53,12 +53,12 @@ export default function Header({
                 ? 'bg-slate-900 border-slate-800 text-white focus-visible:ring-slate-800' 
                 : 'bg-white/70 border-[rgba(255,255,255,0.78)] text-[var(--ink)] backdrop-blur-sm focus-visible:ring-[rgba(255,255,255,0.78)] shadow-sm'
             }`}>
-              <span>{language === 'hi' ? 'अ' : 'A'}</span>
+              <span className="text-brand-grad font-black">{language === 'hi' ? 'अ' : 'A'}</span>
               <span className="hidden"><SelectValue /></span>
             </SelectTrigger>
-            <SelectContent position="popper" className="bg-white border border-[#DDE3EA] rounded-xl shadow-lg z-50 min-w-0 w-14 pt-2 pb-1.5">
-              <SelectItem value="hi" className="cursor-pointer font-sans font-bold text-xs justify-center focus:bg-[var(--page)] focus:text-[var(--ink)] pl-2 pr-2">अ</SelectItem>
-              <SelectItem value="en" className="cursor-pointer font-sans font-bold text-xs justify-center focus:bg-[var(--page)] focus:text-[var(--ink)] pl-2 pr-2">A</SelectItem>
+            <SelectContent position="popper" className="bg-white border border-[#DDE3EA] rounded-md shadow-lg z-50 min-w-0 w-14 pt-2 pb-1.5">
+              <SelectItem value="hi" className={`cursor-pointer font-sans font-bold text-xs justify-center pl-2 pr-2 ${language === 'hi' ? 'text-brand-grad focus:text-brand-grad' : 'focus:bg-[var(--page)] focus:text-[var(--ink)]'}`}>अ</SelectItem>
+              <SelectItem value="en" className={`cursor-pointer font-sans font-bold text-xs justify-center pl-2 pr-2 ${language === 'en' ? 'text-brand-grad focus:text-brand-grad' : 'focus:bg-[var(--page)] focus:text-[var(--ink)]'}`}>A</SelectItem>
             </SelectContent>
           </Select>
         )}
