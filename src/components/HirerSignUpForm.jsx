@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BackgroundOrbs from './bg';
 import Header from './Header';
 import Footer from './Footer';
 import { Check, MapPin, Loader2 } from 'lucide-react';
@@ -98,7 +99,8 @@ export default function HirerSignUpForm({ onNavigate, onBack, language = 'hi', o
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-[#1C2733] font-sans flex flex-col justify-between">
+    <div className="min-h-screen text-[#1C2733] font-sans flex flex-col justify-between">
+      <BackgroundOrbs />
       <Header 
         theme="light" 
         onNavigate={onNavigate} 

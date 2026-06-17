@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BackgroundOrbs from './bg';
 import Header from './Header';
 import Footer from './Footer';
 import { 
@@ -79,15 +80,10 @@ export default function SignUpPage({ onNavigate, initialStep = 'choose', languag
 
   // 4. CHOOSE PATH VIEW (Default)
   return (
-    <div className="min-h-screen bg-transparent text-[var(--ink)] font-sans flex flex-col justify-between">
-      
+    <div className="min-h-screen text-[var(--ink)] font-sans flex flex-col justify-between">
+
       {/* Ambient background glowing blobs */}
-      <div className="bg-blobs">
-        <span className="blob b1"></span>
-        <span className="blob b2"></span>
-        <span className="blob b3"></span>
-        <span className="blob b4"></span>
-      </div>
+      <BackgroundOrbs />
 
       <Header 
         theme="light" 
